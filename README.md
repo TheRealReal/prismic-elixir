@@ -15,7 +15,12 @@ def deps do
 end
 ```
 
+set repo url in your project's config
+```elixir
+  config :prismic,
+    repo_url: "https://micro.cdn.prismic.io/api"
+```
+
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/prismic](https://hexdocs.pm/prismic).
-

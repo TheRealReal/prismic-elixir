@@ -78,6 +78,13 @@ defmodule Prismic do
     |> Map.get(:results, [])
   end
 
+  def documents(%{tags: tags, type: type}, opts) do
+    everything_search_form(opts)
+    |> SearchForm.set_query_predicates([Predicate.at("document.tags", tags), Predicate.at("document.type", type)])
+    |> SearchForm.submit()
+    |> Map.get(:results, [])
+  end
+
   def documents(%{type: type}, opts) do
     everything_search_form(opts)
     |> SearchForm.set_query_predicates([Predicate.at("document.type", type)])

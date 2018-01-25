@@ -361,18 +361,17 @@ defmodule Prismic.Parser do
   end
 
   defp get_publication_dates(fpb, lpb) do
-    first =
-      case DateTime.from_iso8601(fpb) do
-        {:ok, date, 0} -> date
-        {:error, _} -> nil
-      end
-
-    last =
-      case DateTime.from_iso8601(lpb) do
-        {:ok, date, 0} -> date
-        {:error, _} -> nil
-      end
+    first = parse_pub_date(fpb)
+    last = parse_pub_date(lpb)
 
     {first, last}
   end
+
+  defp parse_pub_date(date) when is_binary(date) do
+    case DateTime.from_iso8601(date) do
+      {:ok, date, 0} -> date
+      {:error, _} -> nil
+    end
+  end
+  defp parse_pub_date(nil), do: nil
 end

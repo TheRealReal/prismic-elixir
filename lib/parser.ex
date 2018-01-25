@@ -181,7 +181,11 @@ defmodule Prismic.Parser do
   end
 
   def parse_link(%{linkTo: %{type: type}} = json) do
-    if parser = Map.has_key?(@parsers, type), do: apply(__MODULE__, parser, [json])
+    if {:ok, parser} = Map.fetch(@parsers, type), do: apply(__MODULE__, parser, [json])
+  end
+
+  def parse_link(%{type: type} = json) do
+    if {:ok, parser} = Map.fetch(@parsers, type), do: apply(__MODULE__, parser, [json])
   end
 
   def parse_link(_), do: nil

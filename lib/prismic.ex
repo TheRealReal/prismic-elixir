@@ -1,8 +1,9 @@
 defmodule Prismic do
   alias Prismic.{API, Cache, Predicate, SearchForm}
 
-  @repo_url Application.get_env(:prismic, :repo_url)
-  def api(url \\ @repo_url) do
+  defp repo_url, do: Application.get_env(:prismic, :repo_url)
+
+  def api(url \\ repo_url()) do
     #TODO: include acces token in cache key after supporting tokens
     api_cache_key = url #+ (access_token ? ('#' + access_token) : '')
     entrypoint_response = Cache.get_or_store(api_cache_key, fn ->
@@ -114,7 +115,7 @@ defmodule Prismic do
   end
 
   defp everything_search_form(opts \\ %{}) do
-    a = api(opts[:repo_url] || @repo_url)
+    a = api(opts[:repo_url] || repo_url())
     ref = opts[:ref] || API.find_ref(a, "Master")
 
     a

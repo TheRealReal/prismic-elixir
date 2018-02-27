@@ -86,6 +86,13 @@ defmodule Prismic do
     |> Map.get(:results, [])
   end
 
+  def documents(%{type: type, latitude: latitude, longitude: longitude, radius: radius, location_api_id: api_id}, opts) do
+    everything_search_form(opts)
+    |> SearchForm.set_query_predicates([Predicate.near("my.#{type}.#{api_id}", latitude, longitude, radius), Predicate.at("document.type", type)])
+    |> SearchForm.submit()
+    |> Map.get(:results, [])
+  end
+
   def documents(%{type: type}, opts) do
     everything_search_form(opts)
     |> SearchForm.set_query_predicates([Predicate.at("document.type", type)])

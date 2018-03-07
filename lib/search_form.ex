@@ -59,7 +59,7 @@ defmodule Prismic.SearchForm do
       |> Enum.map(fn {k, v} -> {k, finalize_query(v)} end)
       |> Enum.into([])
 
-    case HTTPoison.get(action, [], params: params) do
+    case Prismic.HTTPClient.get(action, [], params: params) do
       {:ok, %{body: body}} ->
         body
         |> Poison.decode!(keys: :atoms)

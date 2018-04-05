@@ -53,6 +53,7 @@ defmodule Prismic.SearchForm do
   @doc """
   Serialize query params and also set master ref if ref has not been set, and submit the form
   """
+  @spec submit(SearchForm.t()) :: {:ok, any}
   def submit(%SearchForm{form: %Form{action: action}, data: data = %{:ref => ref}})
       when not is_nil(ref) do
     params =
@@ -63,16 +64,15 @@ defmodule Prismic.SearchForm do
     case Prismic.HTTPClient.get(action, [], params: params) do
       {:ok, %{body: body, status_code: status_code}} when status_code >= 400 ->
         Logger.error(body)
-        {:error, Poison.decode!(body)}
+        {:error, body}
       {:ok, %{body: body, status_code: status_code}} when status_code >= 200 ->
         response = body
         |> Poison.decode!(keys: :atoms)
         |> Parser.parse_response()
         {:ok, response}
 
-      # TODO: handle exception
-      :error ->
-        :error
+      {:error, _error} = error ->
+        error
     end
   end
 

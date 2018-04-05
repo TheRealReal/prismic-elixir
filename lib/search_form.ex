@@ -1,4 +1,5 @@
 defmodule Prismic.SearchForm do
+  require Logger
   @moduledoc """
   a submittable form comprised of an api, a prismic form, and data (queries, ref)
   """
@@ -60,10 +61,14 @@ defmodule Prismic.SearchForm do
       |> Enum.into([])
 
     case Prismic.HTTPClient.get(action, [], params: params) do
-      {:ok, %{body: body}} ->
-        body
+      {:ok, %{body: body, status_code: status_code}} when status_code >= 400 ->
+        Logger.error(body)
+        {:error, Poison.decode!(body)}
+      {:ok, %{body: body, status_code: status_code}} when status_code >= 200 ->
+        response = body
         |> Poison.decode!(keys: :atoms)
         |> Parser.parse_response()
+        {:ok, response}
 
       # TODO: handle exception
       :error ->

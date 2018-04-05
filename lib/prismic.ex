@@ -1,5 +1,5 @@
 defmodule Prismic do
-  alias Prismic.{API, Cache, Predicate, SearchForm}
+  alias Prismic.{API, Cache, Document, Predicate, SearchForm}
 
   defp repo_url, do: Application.get_env(:prismic, :repo_url)
 
@@ -31,11 +31,12 @@ defmodule Prismic do
     opts
     |> everything_search_form()
     |> SearchForm.submit()
-    |> Map.get(:results, [])
+    |> extract_results()
   end
 
   @doc "takes map which will match on different bodies to generate queries and
   return documents"
+  @spec documents(map(), map()) :: {:ok, [Document.t()] | Document.t() | nil} | {:error, map()}
   def documents(args, opts \\ %{})
   @doc """
   Retrieve one document by its id
@@ -47,8 +48,7 @@ defmodule Prismic do
     everything_search_form(opts)
     |> SearchForm.set_query_predicates([Predicate.at("document.id", id)])
     |> SearchForm.submit()
-    |> Map.get(:results, [])
-    |> Enum.at(0)
+    |> extract_result()
   end
 
   @doc """
@@ -62,8 +62,7 @@ defmodule Prismic do
     everything_search_form(opts)
     |> SearchForm.set_query_predicates([Predicate.at("my." <> type <> ".uid", uid)])
     |> SearchForm.submit()
-    |> Map.get(:results, [])
-    |> Enum.at(0)
+    |> extract_result()
   end
 
   @doc """
@@ -76,28 +75,28 @@ defmodule Prismic do
     everything_search_form(opts)
     |> SearchForm.set_query_predicates([Predicate.where_in("document.id", ids)])
     |> SearchForm.submit()
-    |> Map.get(:results, [])
+    |> extract_results
   end
 
   def documents(%{tags: tags, type: type}, opts) do
     everything_search_form(opts)
     |> SearchForm.set_query_predicates([Predicate.at("document.tags", tags), Predicate.at("document.type", type)])
     |> SearchForm.submit()
-    |> Map.get(:results, [])
+    |> extract_results
   end
 
   def documents(%{type: type, latitude: latitude, longitude: longitude, radius: radius, location_api_id: api_id}, opts) do
     everything_search_form(opts)
     |> SearchForm.set_query_predicates([Predicate.near("my.#{type}.#{api_id}", latitude, longitude, radius), Predicate.at("document.type", type)])
     |> SearchForm.submit()
-    |> Map.get(:results, [])
+    |> extract_results
   end
 
   def documents(%{type: type}, opts) do
     everything_search_form(opts)
     |> SearchForm.set_query_predicates([Predicate.at("document.type", type)])
     |> SearchForm.submit()
-    |> Map.get(:results, [])
+    |> extract_results
   end
 
   def submit(%SearchForm{} = search_form), do: SearchForm.submit(search_form)
@@ -115,9 +114,9 @@ defmodule Prismic do
         |> SearchForm.set_query_predicates([Predicate.at("document.id", json["mainDocument"])])
         |> SearchForm.set_data_field(:ref, json["ref"])
         |> SearchForm.submit()
-        |> Map.get(:results, [])
+        |> extract_results
     else
-        _ -> []
+        _ -> {:ok, []}
     end
   end
 
@@ -129,4 +128,16 @@ defmodule Prismic do
     |> SearchForm.from_api()
     |> SearchForm.set_ref(ref)
   end
+
+  defp extract_results({:ok, response}), do: {:ok, Map.get(response, :results, [])}
+  defp extract_results({:error, _response} = response), do: response
+
+  defp extract_result({:ok, response}) do
+    result =
+      response
+      |> Map.get(:results, [])
+      |> Enum.at(0)
+    {:ok, result}
+  end
+  defp extract_result({:error, _response} = response), do: response
 end

@@ -4,23 +4,28 @@ defmodule Prismic do
   defp repo_url, do: Application.get_env(:prismic, :repo_url)
 
   def api(url \\ repo_url()) do
-    #TODO: include acces token in cache key after supporting tokens
-    api_cache_key = url #+ (access_token ? ('#' + access_token) : '')
-    entrypoint_response = Cache.get_or_store(api_cache_key, fn ->
-      case Prismic.HTTPClient.get(url) do
-        {:ok, %{status_code: 200}} = response ->
-          {:commit, response}
-        response ->
-          {:ignore, response}
-      end
-    end)
+    # TODO: include acces token in cache key after supporting tokens
+    # + (access_token ? ('#' + access_token) : '')
+    api_cache_key = url
+
+    entrypoint_response =
+      Cache.get_or_store(api_cache_key, fn ->
+        case Prismic.HTTPClient.get(url) do
+          {:ok, %{status_code: 200}} = response ->
+            {:commit, response}
+
+          response ->
+            {:ignore, response}
+        end
+      end)
 
     case entrypoint_response do
       {:ok, %{body: body}} ->
         API.new(body, url)
-      {:error, error} -> {:error, error}
-    end
 
+      {:error, error} ->
+        {:error, error}
+    end
   end
 
   @doc """
@@ -38,6 +43,7 @@ defmodule Prismic do
   return documents"
   @spec documents(map(), map()) :: {:ok, [Document.t()] | Document.t() | nil} | {:error, map()}
   def documents(args, opts \\ %{})
+
   @doc """
   Retrieve one document by its id
   param id [String] the id to search
@@ -75,19 +81,34 @@ defmodule Prismic do
     everything_search_form(opts)
     |> SearchForm.set_query_predicates([Predicate.where_in("document.id", ids)])
     |> SearchForm.submit()
-    |> extract_results
+    |> extract_results()
   end
 
   def documents(%{tags: tags, type: type}, opts) do
     everything_search_form(opts)
-    |> SearchForm.set_query_predicates([Predicate.at("document.tags", tags), Predicate.at("document.type", type)])
+    |> SearchForm.set_query_predicates([
+      Predicate.at("document.tags", tags),
+      Predicate.at("document.type", type)
+    ])
     |> SearchForm.submit()
-    |> extract_results
+    |> extract_results()
   end
 
-  def documents(%{type: type, latitude: latitude, longitude: longitude, radius: radius, location_api_id: api_id}, opts) do
+  def documents(
+        %{
+          type: type,
+          latitude: latitude,
+          longitude: longitude,
+          radius: radius,
+          location_api_id: api_id
+        },
+        opts
+      ) do
     everything_search_form(opts)
-    |> SearchForm.set_query_predicates([Predicate.near("my.#{type}.#{api_id}", latitude, longitude, radius), Predicate.at("document.type", type)])
+    |> SearchForm.set_query_predicates([
+      Predicate.near("my.#{type}.#{api_id}", latitude, longitude, radius),
+      Predicate.at("document.type", type)
+    ])
     |> SearchForm.submit()
     |> extract_results
   end
@@ -96,7 +117,7 @@ defmodule Prismic do
     everything_search_form(opts)
     |> SearchForm.set_query_predicates([Predicate.at("document.type", type)])
     |> SearchForm.submit()
-    |> extract_results
+    |> extract_results()
   end
 
   def submit(%SearchForm{} = search_form), do: SearchForm.submit(search_form)
@@ -107,16 +128,17 @@ defmodule Prismic do
   @return [String] the URL to redirect the user to
   """
   def preview_documents(token) do
-    token = token |> URI.decode
+    token = token |> URI.decode()
+
     with {:ok, %{status_code: 200, body: body}} <- Prismic.HTTPClient.get(token),
          {:ok, json} = Poison.decode(body) do
-        everything_search_form()
-        |> SearchForm.set_query_predicates([Predicate.at("document.id", json["mainDocument"])])
-        |> SearchForm.set_data_field(:ref, json["ref"])
-        |> SearchForm.submit()
-        |> extract_results
+      everything_search_form()
+      |> SearchForm.set_query_predicates([Predicate.at("document.id", json["mainDocument"])])
+      |> SearchForm.set_data_field(:ref, json["ref"])
+      |> SearchForm.submit()
+      |> extract_results()
     else
-        _ -> {:ok, []}
+      _ -> {:ok, []}
     end
   end
 
@@ -137,7 +159,9 @@ defmodule Prismic do
       response
       |> Map.get(:results, [])
       |> Enum.at(0)
+
     {:ok, result}
   end
+
   defp extract_result({:error, _response} = response), do: response
 end

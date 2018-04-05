@@ -4,7 +4,7 @@ defmodule Prismic do
   defp repo_url, do: Application.get_env(:prismic, :repo_url)
 
   def api(url \\ repo_url()) do
-    # TODO: include acces token in cache key after supporting tokens
+    # TODO: include access token in cache key after supporting tokens
     # + (access_token ? ('#' + access_token) : '')
     api_cache_key = url
 

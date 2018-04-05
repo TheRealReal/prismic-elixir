@@ -20,11 +20,16 @@ defmodule Prismic.API do
   """
   @spec new(String.t, String.t) :: {:ok, %API{}} | {:error, any}
   def new(json, repo_url) do
-    json
-    |> Poison.decode!(as: %API{repository_url: repo_url, refs: [%Ref{}]}, keys: :atoms)
-    |> Map.update!(:forms, fn form_map ->
-      for {form_name, form} <- form_map, do: {form_name, struct(Form, form)}
-    end)
+    case Poison.decode(json, as: %API{repository_url: repo_url, refs: [%Ref{}]}, keys: :atoms) do
+      {:ok, %API{} = api} ->
+        api = Map.update!(api, :forms, fn form_map ->
+          for {form_name, form} <- form_map, do: {form_name, struct(Form, form)}
+        end)
+        {:ok, api}
+
+      {:error, _error} = error ->
+        error
+    end
   end
 
   # TODO: this should be a function in the Ref module

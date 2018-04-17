@@ -140,10 +140,13 @@ defmodule Prismic do
     token = token |> URI.decode()
 
     with {:ok, %{status_code: 200, body: body}} <- Prismic.HTTPClient.get(token),
-         {:ok, json} = Poison.decode(body) do
-      everything_search_form()
+         {:ok, json} = Poison.decode(body),
+         {:ok, search_form} = everything_search_form do
+
+
+      search_form
       |> SearchForm.set_query_predicates([Predicate.at("document.id", json["mainDocument"])])
-      |> SearchForm.set_data_field(:ref, json["ref"])
+      |> SearchForm.set_data_field(:ref, token)
       |> submit_and_extract_results()
     else
       _ -> {:ok, []}

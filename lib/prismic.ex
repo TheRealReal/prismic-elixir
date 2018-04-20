@@ -142,8 +142,6 @@ defmodule Prismic do
     with {:ok, %{status_code: 200, body: body}} <- Prismic.HTTPClient.get(token),
          {:ok, json} = Poison.decode(body),
          {:ok, search_form} = everything_search_form() do
-
-
       search_form
       |> SearchForm.set_query_predicates([Predicate.at("document.id", json["mainDocument"])])
       |> SearchForm.set_data_field(:ref, token)
@@ -153,16 +151,16 @@ defmodule Prismic do
     end
   end
 
-  defp everything_search_form(opts \\ %{}) do
+  def everything_search_form(opts \\ %{}) do
     with {:ok, api} <- api(opts[:repo_url] || repo_url()),
          %Ref{} = ref <- opts[:ref] || API.find_ref(api, "Master"),
-           %SearchForm{} = search_form <- SearchForm.from_api(api) do
-
-      search_form = if token = opts[:preview_token] do
-        SearchForm.set_data_field(search_form, :ref, token)
-      else
-        SearchForm.set_ref(search_form, ref)
-      end
+         %SearchForm{} = search_form <- SearchForm.from_api(api) do
+      search_form =
+        if token = opts[:preview_token] do
+          SearchForm.set_data_field(search_form, :ref, token)
+        else
+          SearchForm.set_ref(search_form, ref)
+        end
 
       {:ok, search_form}
     else

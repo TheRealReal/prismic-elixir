@@ -123,6 +123,27 @@ defmodule Prismic do
     end
   end
 
+  def documents(
+        %{
+          type: type,
+          min_value: min_value,
+          max_value: max_value,
+          min_value_field: min_value_field,
+          max_value_field: max_value_field
+        },
+        opts
+      ) do
+    with {:ok, search_form} <- everything_search_form(opts) do
+      search_form
+      |> SearchForm.set_query_predicates([
+        Predicate.lt("my.#{type}.#{min_value_field}", min_value),
+        Predicate.gt("my.#{type}.#{max_value_field}", max_value),
+        Predicate.at("document.type", type)
+      ])
+      |> submit_and_extract_results()
+    end
+  end
+
   def documents(%{type: type}, opts) do
     with {:ok, search_form} <- everything_search_form(opts) do
       search_form

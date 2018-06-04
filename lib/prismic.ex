@@ -103,6 +103,22 @@ defmodule Prismic do
     end
   end
 
+  @doc """
+  Search for all documents matching the `type` and all `required_tags`, plus
+  **at least one** of the `option_tags`.
+  """
+  def documents(%{type: type, required_tags: required_tags, option_tags: option_tags}, opts) do
+    with {:ok, search_form} <- everything_search_form(opts) do
+      search_form
+      |> SearchForm.set_query_predicates([
+        Predicate.at("document.type", type),
+        Predicate.at("document.tags", required_tags),
+        Predicate.any("document.tags", option_tags)
+      ])
+      |> submit_and_extract_results()
+    end
+  end
+
   def documents(
         %{
           type: type,

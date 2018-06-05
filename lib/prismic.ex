@@ -44,9 +44,13 @@ defmodule Prismic do
     end
   end
 
-  @doc "takes map which will match on different bodies to generate queries and
-  return documents"
-  @spec documents(map(), map()) :: {:ok, [Document.t()]} | {:error, map()}
+  @doc """
+  Return all documents matching given query parameters.
+  This function has several clauses which generate queries from parameters
+  passed in a map. For clients who need more fine-grained control over the
+  query, there's also a clause which takes an arbitrary list of `Predicate`s.
+  """
+  @spec documents(map() | [Predicate.t()], map()) :: {:ok, [Document.t()]} | {:error, map()}
   def documents(args, opts \\ %{})
 
   @doc """
@@ -148,6 +152,14 @@ defmodule Prismic do
     with {:ok, search_form} <- everything_search_form(opts) do
       search_form
       |> SearchForm.set_query_predicates([Predicate.at("document.type", type)])
+      |> submit_and_extract_results()
+    end
+  end
+
+  def documents(predicates, opts) when is_list(predicates) and predicates != [] do
+    with {:ok, search_form} <- everything_search_form(opts) do
+      search_form
+      |> SearchForm.set_query_predicates(predicates)
       |> submit_and_extract_results()
     end
   end

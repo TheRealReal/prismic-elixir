@@ -50,7 +50,7 @@ defmodule Prismic do
   passed in a map. For clients who need more fine-grained control over the
   query, there's also a clause which takes an arbitrary list of `Predicate`s.
   """
-  @spec documents(map() | [Predicate.t()], map()) :: {:ok, [Document.t()]} | {:error, map()}
+  @spec documents(map() | [[]], map()) :: {:ok, [Document.t()]} | {:error, map()}
   def documents(args, opts \\ %{})
 
   @doc """

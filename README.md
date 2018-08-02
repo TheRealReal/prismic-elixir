@@ -2,9 +2,6 @@
 
 This is an Elixir-based SDK for Prismic.io
 
-- It is intended for use with any [Plug-based](https://github.com/elixir-plug/plug) library or framework, such as [Phoenix](https://github.com/phoenixframework/phoenix) or [Sugar](https://github.com/sugar-framework/sugar)
-- The default HTTP-client is [HTTPoison](https://github.com/edgurgel/httpoison). We plan to introduce support for a configurable HTTP-client.
-- We welcome other contributions as well. Please, report issues and feel free to submit pull-requests.
   - The primary authors of this library are:
     1. Coburn Berry ([coburncoburn](https://github.com/coburncoburn))
       - API
@@ -15,17 +12,13 @@ This is an Elixir-based SDK for Prismic.io
       - Parser
 - TODOs:
   - [ ] Support authentication in the API
-  - [ ] Support configurable HTTP-client
 
 ## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `prismic` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:prismic, "~> 0.1.0"}
+      {:prismic, git: "https://github.com/TheRealReal/prismic-elixir", branch: "master"}
   ]
 end
 ```
@@ -46,8 +39,20 @@ Prismic.V2.API.new()
 |> SearchForm.submit()
 |> Map.fetch!(:results)
 |> Parser.parse_documents() # %Prismic.Document{id: ..., uid: ..., href: ..., fragments...}
+
+```
+## Configuring HTTP Client
+The default HTTP Client is Poison. It is possible to use any http client that implements the [ Prismic.HTTPClient behaviour ](https://github.com/therealreal/prismic-elixir/blob/master/lib/http_client.ex#L1).
+
+Then, set the HTTPClient Module in config or within
+```
+    Application.put_env(:prismic, :http_client_module, MyApp.HTTPClient)
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/prismic](https://hexdocs.pm/prismic).
+## Configuring Cache
+The default Cache is an [ Agent ](https://github.com/therealreal/prismic-elixir/blob/master/lib/cache.ex#L23). It is possible to use any cache that implements the [ Prismic.Cache behaviour ](https://github.com/therealreal/prismic-elixir/blob/master/lib/cache.ex#L1).
+
+Then, set the Cache Module in config or within
+```
+    Application.put_env(:prismic, :cache_module, MyApp.Cache)
+```

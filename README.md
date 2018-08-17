@@ -1,6 +1,7 @@
 # Prismic  [![Build Status](https://travis-ci.org/TheRealReal/prismic-elixir.svg?branch=master)](https://travis-ci.org/TheRealReal/prismic-elixir)
 
 This is an Elixir-based SDK for Prismic.io
+  Mostly based on https://github.com/prismicio/ruby-kit and https://github.com/prismicio/javascript-kit
 
   - The primary authors of this library are:
     1. Coburn Berry ([coburncoburn](https://github.com/coburncoburn))

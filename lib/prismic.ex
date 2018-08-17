@@ -203,12 +203,14 @@ defmodule Prismic do
   end
 
   defp submit_and_extract_results(%SearchForm{} = search_form) do
-    case SearchForm.submit(search_form) do
-      {:ok, response} ->
-        {:ok, Map.get(response, :results, [])}
+    Cache.get_or_store(inspect(search_form), fn ->
+      case SearchForm.submit(search_form) do
+        {:ok, response} ->
+          {:ok, Map.get(response, :results, [])}
 
-      {:error, _response} = response ->
-        response
-    end
+        {:error, _response} = response ->
+          response
+      end
+    end)
   end
 end

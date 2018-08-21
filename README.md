@@ -12,8 +12,8 @@ This is an Elixir-based SDK for Prismic.io
       - Fragments
       - Parser
 - TODOs:
-  - [x] Add caching on api entrypoint request
-  - [ ] Add optional caching on document requests
+  - [x] Add caching on api entrypoint request ( [Prismic.api/2](https://github.com/TheRealReal/prismic-elixir/blob/master/lib/prismic.ex#L13) )
+  - [ ] Add optional caching on document requests ( [submitting search form](https://github.com/TheRealReal/prismic-elixir/blob/master/lib/prismic.ex#L206) )
   - [ ] Support authentication in the API
 
 ## Installation

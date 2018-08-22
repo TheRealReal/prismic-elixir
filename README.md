@@ -59,3 +59,5 @@ Then, set the Cache Module in config or within
 ```
     Application.put_env(:prismic, :cache_module, MyApp.Cache)
 ```
+
+Only the first leg of the request ( api entrypoint ) is cached. Actual document queries are not cached. It is probably better to just cache calls to the library itself rather than worrying about caching in the library.

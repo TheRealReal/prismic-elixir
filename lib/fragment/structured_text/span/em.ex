@@ -9,4 +9,6 @@ end
 defimpl Span, for: Span.Em do
   # TODO
   def serialize(_, _link_resolver), do: ""
+  def open_tag(_span), do: "<i>"
+  def close_tag(_span), do: "</i>"
 end

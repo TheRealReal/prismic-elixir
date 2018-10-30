@@ -187,12 +187,16 @@ defmodule Prismic do
   def everything_search_form(opts \\ %{}) do
     with {:ok, api} <- api(opts[:repo_url] || repo_url()),
          %Ref{} = ref <- opts[:ref] || API.find_ref(api, "Master"),
-         %SearchForm{} = search_form <- SearchForm.from_api(api) do
+         %SearchForm{} = search_form <- SearchForm.from_api(api),
+         orderings <- opts[:orderings]
+        do
       search_form =
         if token = opts[:preview_token] do
           SearchForm.set_data_field(search_form, :ref, token)
         else
-          SearchForm.set_ref(search_form, ref)
+          search_form
+          |> SearchForm.set_ref(ref)
+          |> SearchForm.set_orderings(orderings)
         end
 
       {:ok, search_form}

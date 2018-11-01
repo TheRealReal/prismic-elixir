@@ -53,6 +53,29 @@ defmodule Prismic.SearchFormTest do
     end
   end
 
+  describe "set_orderings/2" do
+    test "sets the given ordering" do
+      search_form = SearchForm.from_api(@api, :arguments, %{:q => "eggs"})
+
+      orderings = SearchForm.set_orderings(search_form, "[document.first_publication_date]")
+      assert orderings.data[:orderings] == "[document.first_publication_date]"
+    end
+
+    test "sets the default ordering if it receives blank" do
+      search_form = SearchForm.from_api(@api, :arguments, %{:q => "eggs"})
+
+      orderings = SearchForm.set_orderings(search_form, "")
+      assert orderings.data[:orderings] == "[document.last_publication_date desc]"
+    end
+
+    test "sets the default ordering if it receives nil" do
+      search_form = SearchForm.from_api(@api, :arguments, %{:q => "eggs"})
+
+      orderings = SearchForm.set_orderings(search_form, nil)
+      assert orderings.data[:orderings] == "[document.last_publication_date desc]"
+    end
+  end
+
   describe "finalize_query/1" do
     import SearchForm, only: [finalize_query: 1]
     test "makes string version of a list" do

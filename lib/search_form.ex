@@ -56,6 +56,7 @@ defmodule Prismic.SearchForm do
   @spec submit(SearchForm.t()) :: {:ok, any}
   def submit(%SearchForm{form: %Form{action: action}, data: data = %{:ref => ref}})
       when not is_nil(ref) do
+
     params =
       data
       |> Enum.map(fn {k, v} -> {k, finalize_query(v)} end)
@@ -94,6 +95,16 @@ defmodule Prismic.SearchForm do
         # TODO: create an exception type
         raise "ref #{ref_label} not found!"
     end
+  end
+
+  def set_orderings(%SearchForm{} = search_form, nil) do
+    set_data_field(search_form, :orderings, "[document.last_publication_date desc]")
+  end
+  def set_orderings(%SearchForm{} = search_form, "") do
+    set_data_field(search_form, :orderings, "[document.last_publication_date desc]")
+  end
+  def set_orderings(%SearchForm{} = search_form, order) do
+    set_data_field(search_form, :orderings, order)
   end
 
   # @spec set_predicates(Form.t, [Prismic.Predicate.t])

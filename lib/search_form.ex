@@ -14,19 +14,28 @@ defmodule Prismic.SearchForm do
           data: Map.t()
         }
 
-  @spec from_api(API.t(), :everything, Map.t()) :: SearchForm.t() | nil
+  @spec from_api(API.t(), atom(), Map.t()) :: SearchForm.t() | nil
   def from_api(api = %API{forms: forms}, name \\ :everything, data \\ %{}) do
     if form = forms[name], do: SearchForm.new(api, form, data)
   end
 
   @spec new(API.t(), Form.t(), Map.t()) :: t()
   def new(api, form = %Form{fields: fields}, data \\ %{}) do
-    default_data =
+    data =
       fields
       |> build_default_data()
       |> Map.merge(data)
 
-    struct(__MODULE__, api: api, form: form, data: default_data)
+    ref =
+      cond do
+        preview_token = data[:preview_token] -> %Ref{ref: preview_token}
+        ref_label = data[:ref] -> ref_label
+        true -> "Master"
+      end
+
+    struct(__MODULE__, api: api, form: form, data: data)
+    |> set_orderings(data[:orderings])
+    |> set_ref(ref)
   end
 
   @doc """

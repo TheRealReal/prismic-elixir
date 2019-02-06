@@ -27,6 +27,7 @@ defmodule Prismic.Parser do
   alias StructuredText.Span.{Em, Hyperlink, Label, Strong}
 
   require Logger
+  require IEx
 
   @parsers %{
     "Color" => :parse_color,
@@ -104,7 +105,7 @@ defmodule Prismic.Parser do
         %{value: %{document: %{slug: slug, type: doc_type, data: doc_data} = doc} = value} = _json
       ) do
     fragments =
-      if raw_frags = doc_data[doc_type] do
+      if raw_frags = doc_data[String.to_atom(doc_type)] do
         for {name, raw_fragment} <- raw_frags, do: {name, parse_fragment(raw_fragment)}
       end
 
@@ -155,10 +156,10 @@ defmodule Prismic.Parser do
   def parse_group(%{type: "Group", value: groups}) do
     group_docs =
       Enum.map(groups, fn group ->
-        fragments = for {name, raw_fragment} <- group,
-        into: %{} do
-          {name, parse_fragment(raw_fragment)}
-        end
+        fragments =
+          for {name, raw_fragment} <- group, into: %{} do
+            {name, parse_fragment(raw_fragment)}
+          end
 
         %GroupDocument{fragments: fragments}
       end)
@@ -373,5 +374,6 @@ defmodule Prismic.Parser do
       {:error, _} -> nil
     end
   end
+
   defp parse_pub_date(nil), do: nil
 end

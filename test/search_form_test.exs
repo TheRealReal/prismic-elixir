@@ -1,10 +1,92 @@
 defmodule Prismic.SearchFormTest do
   use ExUnit.Case
 
-  alias Prismic.{Predicate, SearchForm}
-  import SearchForm, only: [set_query_predicates: 2]
+  import Prismic.SearchForm, only: [set_query_predicates: 2]
+
+  alias ExUnit.CaptureLog
+  alias Prismic.{Predicate, Ref, SearchForm}
 
   @api Prismic.Factory.build(:api)
+  @everything_form @api.forms[:everything]
+
+  describe "from_api/3" do
+    test "returns a `SearchForm` using the API form with the given name" do
+      search_form = SearchForm.from_api(@api, :everything, %{})
+      assert %SearchForm{} = search_form
+      assert search_form.form == @everything_form
+    end
+
+    test "returns nil if there's no form with the given name" do
+      assert SearchForm.from_api(@api, :not_a_real_name, %{}) == nil
+    end
+  end
+
+  describe "new/3" do
+    test "respects settings for after, fetchLinks, orderings, page, and pageSize" do
+      settings = %{
+        after: "document_id",
+        fetchLinks: "some.link",
+        orderings: "[my.object.field]",
+        page: "5",
+        pageSize: "10"
+      }
+
+      search_form = SearchForm.new(@api, @everything_form, settings)
+      assert Map.take(search_form.data, Map.keys(settings)) == settings
+    end
+
+    test "uses form's defaults for fields which are not provided" do
+      api_fields = @everything_form.fields
+
+      defaults = %{
+        page: api_fields.page.default,
+        pageSize: api_fields.pageSize.default
+      }
+
+      search_form = SearchForm.new(@api, @everything_form, %{})
+      assert Map.take(search_form.data, [:page, :pageSize]) == defaults
+    end
+
+    test "orders documents by last publication date if `:orderings` isn't provided" do
+      search_form = SearchForm.new(@api, @everything_form)
+      assert search_form.data.orderings == "[document.last_publication_date desc]"
+    end
+
+    test "uses preview token as ref if given a preview token" do
+      search_form = SearchForm.new(@api, @everything_form, %{preview_token: "preview"})
+      assert search_form.data.ref == "preview"
+    end
+
+    test "uses preview_token, not ref, if both are given" do
+      search_form =
+        SearchForm.new(@api, @everything_form, %{ref: "ref", preview_token: "preview"})
+
+      assert search_form.data.ref == "preview"
+    end
+
+    test "uses ref directly if it's a Ref struct" do
+      search_form = SearchForm.new(@api, @everything_form, %{ref: %Ref{ref: "ref"}})
+      assert search_form.data.ref == "ref"
+    end
+
+    test "interprets ref as a label if it's a string" do
+      search_form = SearchForm.new(@api, @everything_form, %{ref: "Master"})
+      assert search_form.data.ref == "WH8MzyoAAGoSGJwT"
+    end
+
+    test "throws an error if no ref with the given label exists" do
+      CaptureLog.capture_log(fn ->
+        assert_raise(RuntimeError, fn ->
+          SearchForm.new(@api, @everything_form, %{ref: "Fake Label"})
+        end)
+      end)
+    end
+
+    test "uses master ref by default" do
+      search_form = SearchForm.new(@api, @everything_form)
+      assert search_form.data.ref == "WH8MzyoAAGoSGJwT"
+    end
+  end
 
   describe "get_search_form/3" do
     test "initializes default data from form" do
@@ -37,9 +119,9 @@ defmodule Prismic.SearchFormTest do
 
   describe "set_ref/2" do
     test "sets ref from api" do
-      search_form = SearchForm.from_api(@api, :arguments, %{:q => "eggs"})
+      search_form =
+        SearchForm.from_api(@api, :arguments, %{q: "eggs", ref: %Ref{ref: "some_ref"}})
 
-      assert is_nil(search_form.data[:ref])
       reffed = SearchForm.set_ref(search_form, "Master")
       assert reffed.data[:ref] == "WH8MzyoAAGoSGJwT"
     end
@@ -107,7 +189,6 @@ defmodule Prismic.SearchFormTest do
     end
 
     test "sets non multiple fields by replacement", %{search_form: search_form} do
-      assert is_nil(search_form.data[:ref])
       assert set_data_field(search_form, :ref, 1).data[:ref] == 1
       double_updated =
         search_form

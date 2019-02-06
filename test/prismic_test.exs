@@ -30,12 +30,4 @@ defmodule Prismic.Test do
       {:error, _error} = Prismic.all()
     end
   end
-
-  describe "everything_search_form/1" do
-    test "uses repo_url from configuration if none is given" do
-      configured_repo_url = Application.get_env(:prismic, :repo_url)
-      {:ok, search_form} = Prismic.everything_search_form(%{})
-      assert search_form.api.repository_url == configured_repo_url
-    end
-  end
 end

@@ -27,7 +27,6 @@ defmodule Prismic.Parser do
   alias StructuredText.Span.{Em, Hyperlink, Label, Strong}
 
   require Logger
-  require IEx
 
   @parsers %{
     "Color" => :parse_color,

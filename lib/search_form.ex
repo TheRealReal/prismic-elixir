@@ -26,16 +26,9 @@ defmodule Prismic.SearchForm do
       |> build_default_data()
       |> Map.merge(data)
 
-    ref =
-      cond do
-        preview_token = data[:preview_token] -> %Ref{ref: preview_token}
-        ref_label = data[:ref] -> ref_label
-        true -> "Master"
-      end
-
     struct(__MODULE__, api: api, form: form, data: data)
     |> set_orderings(data[:orderings])
-    |> set_ref(ref)
+    |> set_ref_from_data()
   end
 
   @doc """
@@ -140,4 +133,19 @@ defmodule Prismic.SearchForm do
   @doc "we must make a query string friendly version of a prismic query list, other data types are query encodable already"
   def finalize_query(query) when is_list(query), do: "[#{query}]"
   def finalize_query(query), do: query
+
+  # Inside `search_form`'s `data`, convert a preview token or a ref label to a
+  # ref id. Use Master ref as default.
+  @spec set_ref_from_data(t) :: t
+  defp set_ref_from_data(%{data: %{preview_token: token}} = search_form) when token != nil do
+    set_data_field(search_form, :ref, token)
+  end
+
+  defp set_ref_from_data(%{data: %{ref: label}} = search_form) when label != nil do
+    set_ref(search_form, label)
+  end
+
+  defp set_ref_from_data(search_form) do
+    set_ref(search_form, "Master")
+  end
 end

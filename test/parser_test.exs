@@ -85,7 +85,7 @@ defmodule Prismic.ParserTest do
       assert Parser.parse_document_link(@prismic_document_link) == @parsed_document_link
     end
 
-    test "includes fragments in DocumentLink when Prismic responseincludes linked data" do
+    test "includes fragments in DocumentLink when Prismic response includes linked data" do
       prismic_data = %{
         measurement: %{
           description: %{

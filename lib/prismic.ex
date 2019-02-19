@@ -1,6 +1,6 @@
 defmodule Prismic do
   require Logger
-  alias Prismic.{API, Cache, Document, Predicate, Ref, SearchForm}
+  alias Prismic.{API, Cache, Document, Predicate, SearchForm}
 
   defp repo_url, do: Application.get_env(:prismic, :repo_url)
 
@@ -184,25 +184,19 @@ defmodule Prismic do
     end
   end
 
+  @spec everything_search_form(map()) :: {:ok, SearchForm.t()} | {:error, any()}
   def everything_search_form(opts \\ %{}) do
-    with {:ok, api} <- api(opts[:repo_url] || repo_url()),
-         %Ref{} = ref <- opts[:ref] || API.find_ref(api, "Master"),
-         %SearchForm{} = search_form <- SearchForm.from_api(api),
-         orderings <- opts[:orderings]
-        do
-      search_form =
-        if token = opts[:preview_token] do
-          SearchForm.set_data_field(search_form, :ref, token)
-        else
-          search_form
-          |> SearchForm.set_ref(ref)
-          |> SearchForm.set_orderings(orderings)
-        end
+    repo_url = opts[:repo_url] || repo_url()
 
+    with {:ok, api} <- api(repo_url),
+         %SearchForm{} = search_form <- SearchForm.from_api(api, :everything, opts) do
       {:ok, search_form}
     else
       {:error, _error} = error ->
         error
+
+      nil ->
+        {:error, "No `:everything` form available for #{repo_url}"}
     end
   end
 

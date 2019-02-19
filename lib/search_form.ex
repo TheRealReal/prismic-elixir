@@ -1,5 +1,6 @@
 defmodule Prismic.SearchForm do
   require Logger
+
   @moduledoc """
   a submittable form comprised of an api, a prismic form, and data (queries, ref)
   """
@@ -13,19 +14,21 @@ defmodule Prismic.SearchForm do
           data: Map.t()
         }
 
-  @spec from_api(API.t(), :everything, Map.t(), Map.t()) :: SearchForm.t() | nil
-  def from_api(api = %API{forms: forms}, name \\ :everything, data \\ %{}, ref \\ %{}) do
-    if form = forms[name], do: SearchForm.new(api, form, data, ref)
+  @spec from_api(API.t(), atom(), Map.t()) :: SearchForm.t() | nil
+  def from_api(api = %API{forms: forms}, name \\ :everything, data \\ %{}) do
+    if form = forms[name], do: SearchForm.new(api, form, data)
   end
 
-  @spec new(API.t(), Form.t(), Map.t(), Map.t()) :: t()
-  def new(api, form = %Form{fields: fields}, data \\ %{}, _ref \\ %{}) do
-    default_data =
+  @spec new(API.t(), Form.t(), Map.t()) :: t()
+  def new(api, form = %Form{fields: fields}, data \\ %{}) do
+    data =
       fields
       |> build_default_data()
       |> Map.merge(data)
 
-    struct(__MODULE__, api: api, form: form, data: default_data)
+    struct(__MODULE__, api: api, form: form, data: data)
+    |> set_orderings(data[:orderings])
+    |> set_ref_from_data()
   end
 
   @doc """
@@ -130,4 +133,19 @@ defmodule Prismic.SearchForm do
   @doc "we must make a query string friendly version of a prismic query list, other data types are query encodable already"
   def finalize_query(query) when is_list(query), do: "[#{query}]"
   def finalize_query(query), do: query
+
+  # Inside `search_form`'s `data`, convert a preview token or a ref label to a
+  # ref id. Use Master ref as default.
+  @spec set_ref_from_data(t) :: t
+  defp set_ref_from_data(%{data: %{preview_token: token}} = search_form) when token != nil do
+    set_data_field(search_form, :ref, token)
+  end
+
+  defp set_ref_from_data(%{data: %{ref: label}} = search_form) when label != nil do
+    set_ref(search_form, label)
+  end
+
+  defp set_ref_from_data(search_form) do
+    set_ref(search_form, "Master")
+  end
 end

@@ -14,6 +14,19 @@ defmodule Prismic.SearchForm do
           data: Map.t()
         }
 
+  @valid_query_params ~w(
+    access_token
+    after
+    fetch
+    fetchLinks
+    lang
+    orderings
+    page
+    pageSize
+    q
+    ref
+  )a
+
   @spec from_api(API.t(), atom(), Map.t()) :: SearchForm.t() | nil
   def from_api(api = %API{forms: forms}, name \\ :everything, data \\ %{}) do
     if form = forms[name], do: SearchForm.new(api, form, data)
@@ -59,9 +72,9 @@ defmodule Prismic.SearchForm do
   @spec submit(SearchForm.t()) :: {:ok, any}
   def submit(%SearchForm{form: %Form{action: action}, data: data = %{:ref => ref}})
       when not is_nil(ref) do
-
     params =
       data
+      |> Enum.filter(fn {key, _value} -> key in @valid_query_params end)
       |> Enum.map(fn {k, v} -> {k, finalize_query(v)} end)
       |> Enum.into([])
 
@@ -69,10 +82,13 @@ defmodule Prismic.SearchForm do
       {:ok, %{body: body, status_code: status_code}} when status_code >= 400 ->
         Logger.error(body)
         {:error, body}
+
       {:ok, %{body: body, status_code: status_code}} when status_code >= 200 ->
-        response = body
-        |> Poison.decode!(keys: :atoms)
-        |> Parser.parse_response()
+        response =
+          body
+          |> Poison.decode!(keys: :atoms)
+          |> Parser.parse_response()
+
         {:ok, response}
 
       {:error, _error} = error ->
@@ -89,6 +105,7 @@ defmodule Prismic.SearchForm do
   def set_ref(search_form = %SearchForm{}, %Ref{ref: ref}) do
     set_data_field(search_form, :ref, ref)
   end
+
   def set_ref(search_form = %SearchForm{api: api = %API{}}, ref_label) do
     case API.find_ref(api, ref_label) do
       %Ref{ref: ref} ->
@@ -103,9 +120,11 @@ defmodule Prismic.SearchForm do
   def set_orderings(%SearchForm{} = search_form, nil) do
     set_data_field(search_form, :orderings, "[document.last_publication_date desc]")
   end
+
   def set_orderings(%SearchForm{} = search_form, "") do
     set_data_field(search_form, :orderings, "[document.last_publication_date desc]")
   end
+
   def set_orderings(%SearchForm{} = search_form, order) do
     set_data_field(search_form, :orderings, order)
   end

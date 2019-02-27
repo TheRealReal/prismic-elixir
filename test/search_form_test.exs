@@ -4,10 +4,49 @@ defmodule Prismic.SearchFormTest do
   import Prismic.SearchForm, only: [set_query_predicates: 2]
 
   alias ExUnit.CaptureLog
-  alias Prismic.{Predicate, Ref, SearchForm}
+  alias Prismic.{Form, Predicate, Ref, Response, SearchForm}
 
   @api Prismic.Factory.build(:api)
   @everything_form @api.forms[:everything]
+
+  defmodule HTTPClient do
+    @behaviour Prismic.HTTPClient
+
+    def get("submit_action", [], params: params) do
+      if params != expected_params() do
+        raise "unexpected parameters to \"submit_action\""
+      end
+
+      {:ok,
+       %{
+         body: "{\"results\": []}",
+         status_code: 200
+       }}
+    end
+
+    def get(_url, _headers, _options) do
+      raise "SearchFormTest.HTTPClient.get/3 called with unexpected parameters"
+    end
+
+    def post(_url, _data, _headers, _options) do
+      raise "SearchFormTest.HTTPClient.post/4 called with unexpected paramters"
+    end
+
+    def expected_params do
+      [
+        access_token: "secret_token",
+        after: "document_id",
+        fetch: "docType.fieldName,docType.other",
+        fetchLinks: "otherDocType.name",
+        lang: "en-US",
+        orderings: "[document.last_publication_date desc]",
+        page: "1",
+        pageSize: "20",
+        q: "[at(document.id, \"{some_id}\")]",
+        ref: "ref"
+      ]
+    end
+  end
 
   describe "from_api/3" do
     test "returns a `SearchForm` using the API form with the given name" do
@@ -106,14 +145,27 @@ defmodule Prismic.SearchFormTest do
   end
 
   describe "submit/1" do
-    #TODO: use bypass, which can be removed when http client is injectable
-    # and a test http client will not actually submit
-    test "defaults to master ref" do
+    # Use this test file's HTTP client instead of the default one
+    setup do
+      previous_http_client = Application.get_env(:prismic, :http_client_module)
+      Application.put_env(:prismic, :http_client_module, HTTPClient)
 
+      on_exit(fn ->
+        Application.put_env(:prismic, :http_client_module, previous_http_client)
+      end)
+
+      %{params: Map.new(HTTPClient.expected_params())}
     end
 
-    test "submits to form action with data as query string" do
+    test "submits to form action with data as query string", %{params: params} do
+      form = %SearchForm{form: %Form{action: "submit_action"}, data: params}
+      assert SearchForm.submit(form) == {:ok, %Response{results: []}}
+    end
 
+    test "filters out unrecognized options before submitting", %{params: params} do
+      invalid_params = Map.merge(params, %{not_valid: "blah", fake_param: "bloo"})
+      form = %SearchForm{form: %Form{action: "submit_action"}, data: invalid_params}
+      assert SearchForm.submit(form) == {:ok, %Response{results: []}}
     end
   end
 
@@ -160,6 +212,7 @@ defmodule Prismic.SearchFormTest do
 
   describe "finalize_query/1" do
     import SearchForm, only: [finalize_query: 1]
+
     test "makes string version of a list" do
       assert finalize_query(["a"]) == "[a]"
     end
@@ -180,6 +233,7 @@ defmodule Prismic.SearchFormTest do
 
     test "sets fields tagged multiple by concatenation", %{search_form: search_form} do
       assert set_data_field(search_form, :q, 1).data[:q] == [1]
+
       double_updated =
         search_form
         |> set_data_field(:q, 1)
@@ -190,6 +244,7 @@ defmodule Prismic.SearchFormTest do
 
     test "sets non multiple fields by replacement", %{search_form: search_form} do
       assert set_data_field(search_form, :ref, 1).data[:ref] == 1
+
       double_updated =
         search_form
         |> set_data_field(:ref, 1)
@@ -212,32 +267,31 @@ defmodule Prismic.SearchFormTest do
   end
 
   describe "set_predicates/2 with default query" do
-
     setup do
       {:ok, search_form: SearchForm.from_api(@api, :arguments)}
     end
 
-    test "adds single query to form with default values", %{search_form: search_form}  do
+    test "adds single query to form with default values", %{search_form: search_form} do
       predicate = Predicate.at("document.id", "UrjI1gEAALOCeO5i")
       updated_search_form = set_query_predicates(search_form, [predicate])
 
       assert updated_search_form.data[:q] == [
-        ~s{[:d = at(document.id, "UrjI1gEAALOCeO5i")]},
-        ~s{[:d = any(document.type, ["argument"])]}
-      ]
+               ~s{[:d = at(document.id, "UrjI1gEAALOCeO5i")]},
+               ~s{[:d = any(document.type, ["argument"])]}
+             ]
     end
 
-    test "adds multiple queries to form with default value", %{search_form: search_form}  do
+    test "adds multiple queries to form with default value", %{search_form: search_form} do
       predicate = Predicate.at("document.id", "UrjI1gEAALOCeO5i")
       predicate2 = Predicate.at("document.type", "eggs")
 
       updated_search_form = set_query_predicates(search_form, [predicate, predicate2])
+
       assert updated_search_form.data[:q] == [
-        ~s{[:d = at(document.id, "UrjI1gEAALOCeO5i")]},
-        ~s{[:d = at(document.type, "eggs")]},
-        ~s{[:d = any(document.type, ["argument"])]}
-      ]
+               ~s{[:d = at(document.id, "UrjI1gEAALOCeO5i")]},
+               ~s{[:d = at(document.type, "eggs")]},
+               ~s{[:d = any(document.type, ["argument"])]}
+             ]
     end
   end
-
 end

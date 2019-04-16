@@ -23,13 +23,17 @@ end
 
 defmodule Prismic.HTTPClient.Default do
   @behaviour Prismic.HTTPClient
-# TODO: wrap in code.ensure_loaded when HTTPoison is an optional
-# dependency
+  # TODO: wrap in code.ensure_loaded when HTTPoison is an optional
+  # dependency
+  @default_options [
+    ssl: [{:versions, [:'tlsv1.2']}]
+  ]
+
   def get(url, headers, options) do
-    HTTPoison.get(url, headers, options)
+    HTTPoison.get(url, headers, @default_options ++ options)
   end
 
   def post(url, data, headers, options) do
-    HTTPoison.post(url, data, headers, options)
+    HTTPoison.post(url, data, headers, @default_options ++ options)
   end
 end

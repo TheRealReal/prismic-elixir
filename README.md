@@ -52,6 +52,13 @@ Then, set the HTTPClient Module in config or within
     Application.put_env(:prismic, :http_client_module, MyApp.HTTPClient)
 ```
 
+## Add TLS 1.2
+Transport Layer Socket (TLS) is part of the HTTP socket secure layer that, among other things, prevent communication eavesdropping.
+Several serious vulnerabilities however affect the 1.0 and 1.1 versions of TLS. As a result, SaaS services providers, as well as web browsers editors and other Internet actors, are coordinating their efforts to remove TLS version 1.0 and 1.1 from their services and products.
+If you don't use the default provided solution with `HTTPoison`, it is necessary to configure your Http client to use TLS 1.2.
+
+Prismic will stop to support TLS 1.0 or TLS 1.1 from May 15, 2019 at 00:00 CET.
+
 ## Configuring Cache
 The default Cache is an [ Agent ](https://github.com/therealreal/prismic-elixir/blob/master/lib/cache.ex#L23). It is possible to use any cache that implements the [ Prismic.Cache behaviour ](https://github.com/therealreal/prismic-elixir/blob/master/lib/cache.ex#L1).
 

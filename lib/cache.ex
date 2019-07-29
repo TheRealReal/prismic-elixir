@@ -74,5 +74,5 @@ defmodule Prismic.Cache.Default do
     end)
   end
 
-  defp now, do: System.os_time(:seconds)
+  defp now, do: System.os_time(:second)
 end

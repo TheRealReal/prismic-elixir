@@ -5,7 +5,7 @@ defmodule Prismic.Fragment.FileLink do
           url: String.t(),
           name: String.t(),
           kind: String.t(),
-          size: Integer.t(),
+          size: String.t(),
           target: String.t()
         }
 end

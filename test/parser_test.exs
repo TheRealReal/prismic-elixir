@@ -1,7 +1,7 @@
 defmodule Prismic.ParserTest do
   use ExUnit.Case
 
-  alias Prismic.Fragment.{DocumentLink, StructuredText, Text, WebLink}
+  alias Prismic.Fragment.{DocumentLink, IntegrationFields, StructuredText, Text, WebLink}
   alias Prismic.Parser
 
   describe "parsing web links" do
@@ -107,6 +107,26 @@ defmodule Prismic.ParserTest do
       parsed_link_with_data = Map.put(@parsed_document_link, :fragments, parsed_fragments)
 
       assert Parser.parse_document_link(prismic_link_with_data) == parsed_link_with_data
+    end
+  end
+
+  @prismic_integration_fields %{
+    type: "IntegrationFields",
+    value: %{
+      a_key: "a value"
+    }
+  }
+
+  @parsed_integration_fields %IntegrationFields{
+    value: %{
+      a_key: "a value"
+    }
+  }
+
+  describe "parse_integration_fields/1" do
+    test "translates Prismic v1 response format into IntegrationFields struct" do
+      assert Parser.parse_integration_fields(@prismic_integration_fields) ==
+               @parsed_integration_fields
     end
   end
 end

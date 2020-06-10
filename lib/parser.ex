@@ -9,6 +9,7 @@ defmodule Prismic.Parser do
     Embed,
     FileLink,
     Geopoint,
+    IntegrationFields,
     Image,
     ImageLink,
     Multiple,
@@ -34,6 +35,7 @@ defmodule Prismic.Parser do
     "Embed" => :parse_embed,
     "GeoPoint" => :parse_geo_point,
     "Group" => :parse_group,
+    "IntegrationFields" => :parse_integration_fields,
     "Image" => :parse_image,
     "Link.web" => :parse_web_link,
     "Multiple" => :parse_multiple,
@@ -375,4 +377,7 @@ defmodule Prismic.Parser do
   end
 
   defp parse_pub_date(nil), do: nil
+
+  def parse_integration_fields(%{type: "IntegrationFields"} = block),
+    do: struct(IntegrationFields, block)
 end

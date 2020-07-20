@@ -55,6 +55,59 @@ defmodule Prismic.ParserTest do
     end
   end
 
+  describe "parse_structured_text/1" do
+    test "parses spans" do
+      text = %{
+        type: "StructuredText",
+        value: [
+          %{
+            spans: [
+              %{
+                start: 0,
+                end: 22,
+                type: "label",
+                data: %{label: "Suisse Intl"}
+              },
+              %{
+                start: 0,
+                end: 11,
+                type: "em"
+              },
+              %{
+                start: 11,
+                end: 22,
+                type: "strong"
+              }
+            ],
+            text: "Is there life on Mars?",
+            type: "paragraph"
+          }
+        ]
+      }
+
+      parsed = Parser.parse_structured_text(text)
+
+      assert parsed ==
+               %Prismic.Fragment.StructuredText{
+                 blocks: [
+                   %Prismic.Fragment.StructuredText.Block.Text.Paragraph{
+                     label: nil,
+                     spans: [
+                       %Prismic.Fragment.StructuredText.Span.Label{
+                         end: 22,
+                         label: "Suisse Intl",
+                         start: 0
+                       },
+                       %Prismic.Fragment.StructuredText.Span.Em{end: 11, start: 0},
+                       %Prismic.Fragment.StructuredText.Span.Strong{end: 22, start: 11}
+                     ],
+                     text: "Is there life on Mars?"
+                   }
+                 ]
+               }
+    end
+  end
+
   @prismic_document_link %{
     type: "Link.document",
     value: %{

@@ -1,9 +1,9 @@
 alias Prismic.Fragment.StructuredText.Span
 
 defmodule Span.Label do
-  defstruct [:label]
+  defstruct [:label, :start, :end]
 
-  @type t :: %__MODULE__{label: String.t()}
+  @type t :: %__MODULE__{label: String.t(), start: Integer.t(), end: Integer.t()}
 end
 
 defimpl Span, for: Span.Label do

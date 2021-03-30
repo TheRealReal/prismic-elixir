@@ -1,5 +1,5 @@
 defmodule Prismic.Document do
-  alias Prismic.Fragment
+  alias Prismic.{AlternateLanguage, Fragment}
 
   defstruct [
     :id,
@@ -18,7 +18,7 @@ defmodule Prismic.Document do
   @type fragment :: any()
   @type t :: %__MODULE__{
           id: String.t(),
-          uid: String.t(),
+          uid: String.t() | nil,
           type: String.t(),
           href: String.t(),
           tags: [String.t()],
@@ -26,8 +26,8 @@ defmodule Prismic.Document do
           first_publication_date: DateTime.t() | nil,
           last_publication_date: DateTime.t() | nil,
           lang: String.t(),
-          alternate_languages: [String.t()],
-          fragments: [fragment]
+          alternate_languages: %{optional(String.t()) => AlternateLanguage.t()},
+          fragments: map
         }
 
   def as_html(%{fragments: fragments}, link_resolver \\ nil) do

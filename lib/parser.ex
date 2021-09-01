@@ -2,6 +2,7 @@ defmodule Prismic.Parser do
   alias Prismic.{AlternateLanguage, Document, Group, GroupDocument, Fragment, Response}
 
   alias Fragment.{
+    Boolean,
     Color,
     CompositeSlice,
     Date,
@@ -30,6 +31,7 @@ defmodule Prismic.Parser do
   require Logger
 
   @parsers %{
+    "Boolean" => :parse_boolean,
     "Color" => :parse_color,
     "Date" => :parse_date,
     "Embed" => :parse_embed,
@@ -55,6 +57,7 @@ defmodule Prismic.Parser do
     defexception message: "Prismic document(s) contain errors"
   end
 
+  @spec parse_document(map) :: Document.t()
   def parse_document(
         %{data: data, first_publication_date: fpd, last_publication_date: lpd} = results_json
       ) do
@@ -93,6 +96,10 @@ defmodule Prismic.Parser do
   end
 
   ## PARSERS
+
+  def parse_boolean(json) do
+    struct(Boolean, json)
+  end
 
   def parse_color(%{type: "Color", value: value}) do
     %Color{value: String.slice(value, 1..-1)}
@@ -202,7 +209,6 @@ defmodule Prismic.Parser do
     Enum.reduce(value, [], fn
       %{value: value, slice_type: type, slice_label: label}, slices ->
         slice = %SimpleSlice{slice_type: type, slice_label: label, value: parse_fragment(value)}
-
         [slice | slices]
 
       %{:"non-repeat" => non_repeat, repeat: repeat} = raw_composite, slices ->

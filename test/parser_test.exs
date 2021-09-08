@@ -1,8 +1,84 @@
 defmodule Prismic.ParserTest do
   use ExUnit.Case
 
-  alias Prismic.Fragment.{DocumentLink, IntegrationFields, StructuredText, Text, WebLink}
-  alias Prismic.Parser
+  alias Prismic.Fragment.{
+    Boolean,
+    CompositeSlice,
+    DocumentLink,
+    IntegrationFields,
+    StructuredText,
+    Text,
+    WebLink
+  }
+
+  alias Prismic.{Document, Parser}
+
+  @sample_document_result %{
+    id: "valid_id",
+    uid: "valid_uid",
+    type: "page",
+    slugs: ["slug1", "slug2"],
+    first_publication_date: "2021-07-16T21:06:13+0000",
+    last_publication_date: "2021-08-23T19:03:34+0000",
+    data: %{
+      page: %{
+        body: %{
+          type: "SliceZone",
+          value: [
+            %{
+              type: "Slice",
+              slice_type: "Carousel",
+              slice_label: nil,
+              repeat: [
+                %{
+                  image: %{
+                    type: "Image",
+                    value: %{
+                      main: %{
+                        dimensions: %{
+                          width: 1200,
+                          height: 600
+                        },
+                        alt: nil,
+                        copyright: nil,
+                        url: "https://images.prismic.io/example-repo/totally-real-image.png"
+                      },
+                      views: %{}
+                    }
+                  }
+                }
+              ],
+              "non-repeat": %{
+                desktop_only: %{
+                  type: "Boolean",
+                  value: false
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+
+  describe "parse_document/1" do
+    test "parses boolean fragments" do
+      assert %Document{
+               fragments: %{
+                 body: [
+                   %CompositeSlice{
+                     non_repeat: %{
+                       desktop_only: %Boolean{
+                         value: false
+                       }
+                     },
+                     repeat: %Prismic.Group{}
+                   }
+                 ]
+               }
+             } = Parser.parse_document(@sample_document_result)
+    end
+  end
 
   describe "parsing web links" do
     test "parses web link within structured text" do

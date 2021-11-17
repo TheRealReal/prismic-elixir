@@ -6,7 +6,7 @@ defmodule Prismic.Mixfile do
       app: :prismic,
       version: "0.1.0",
       elixir: "~> 1.6",
-      start_permanent: Mix.env == :prod,
+      start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
   end
@@ -19,7 +19,10 @@ defmodule Prismic.Mixfile do
   end
 
   defp deps do
-    [{:httpoison, "~> 1.0", optional: true},
-     {:poison, "~> 3.1"}]
+    [
+      {:httpoison, "~> 1.0", optional: true},
+      {:poison, "~> 3.1"},
+      {:telemetry, "~> 1.0"}
+    ]
   end
 end

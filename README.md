@@ -1,4 +1,4 @@
-# Prismic  [![Build Status](https://travis-ci.org/TheRealReal/prismic-elixir.svg?branch=master)](https://travis-ci.org/TheRealReal/prismic-elixir)
+# Prismic ![Build Status Badge](https://github.com/therealreal/prismic-elixir/actions/workflows/ci.yml/badge.svg)
 
 This is an Elixir-based SDK for Prismic.io
   Mostly based on https://github.com/prismicio/ruby-kit and https://github.com/prismicio/javascript-kit

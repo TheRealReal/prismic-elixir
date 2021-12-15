@@ -9,5 +9,9 @@ end
 
 defimpl Prismic.Fragment, for: Prismic.Fragment.Image do
   # TODO
-  def as_html(_, _, _), do: ""
+  def as_html(img, _link_resolver, _html_serializer) do
+    main = img.main
+    %{url: url, height: h, width: w} = main
+    ~s[<img src="#{url}" height="#{h}" width="#{w}" />]
+  end
 end
